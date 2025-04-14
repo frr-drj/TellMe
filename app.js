@@ -1,4 +1,3 @@
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyC7Y_FWNpb0rB5wSNb2Xc7X2W7Sg99Z5-M",
   authDomain: "tellme-8f210.firebaseapp.com",
@@ -11,75 +10,140 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
-// DOM elements
-const usernameInput = document.getElementById('username');
-const storyInput = document.getElementById('storyInput');
-const addStoryButton = document.getElementById('addStoryButton');
-const storyDiv = document.getElementById('story');
-const wordCount = document.getElementById('wordCount');
-const toggleMode = document.getElementById('toggleMode');
+const email = document.getElementById('email');
+const password = document.getElementById('password');
+const displayName = document.getElementById('displayName');
+const photoURL = document.getElementById('photoURL');
+const authSection = document.getElementById('authSection');
+const chatSection = document.getElementById('chatSection');
+const userName = document.getElementById('userName');
+const userPhoto = document.getElementById('userPhoto');
+const messageText = document.getElementById('messageText');
+const messagesDiv = document.getElementById('messages');
+const adminPanel = document.getElementById('adminPanel');
+const adminBadge = document.getElementById('adminBadge');
 
-// Toggle dark mode
-toggleMode.addEventListener('click', () => {
-  document.body.classList.toggle('dark');
-});
+let currentUser = null;
+let adminEmail = "giridirghraj@gmail.com";
 
-// Add story
-addStoryButton.addEventListener('click', () => {
-  const storyPart = storyInput.value.trim();
-  const username = usernameInput.value.trim() || "Anonymous";
+function register() {
+  auth.createUserWithEmailAndPassword(email.value, password.value)
+    .then(cred => {
+      return cred.user.updateProfile({
+        displayName: displayName.value,
+        photoURL: photoURL.value || ''
+      });
+    });
+}
 
-  if (storyPart) {
-    db.collection('story').add({
-      text: storyPart,
-      username: username,
-      likes: 0,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    }).then(() => {
-      storyInput.value = '';
-    }).catch(err => console.error("Error:", err));
+function login() {
+  auth.signInWithEmailAndPassword(email.value, password.value)
+    .catch(err => alert(err.message));
+}
+
+function logout() {
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    authSection.classList.add('hidden');
+    chatSection.classList.remove('hidden');
+    userName.innerText = user.displayName || "Anonymous";
+    userPhoto.src = user.photoURL || 'https://via.placeholder.com/40';
+    if (user.email === adminEmail) {
+      adminPanel.classList.remove('hidden');
+      adminBadge.classList.remove('hidden');
+    }
+    loadMessages();
+  } else {
+    currentUser = null;
+    authSection.classList.remove('hidden');
+    chatSection.classList.add('hidden');
+    adminPanel.classList.add('hidden');
   }
 });
 
-// Real-time listener
-db.collection('story').orderBy('timestamp').onSnapshot(snapshot => {
-  storyDiv.innerHTML = '';
-  let totalWords = 0;
+function sendMessage() {
+  const text = messageText.value.trim();
+  if (!text) return;
 
-  snapshot.docs.forEach(doc => {
-    const { text, username, likes } = doc.data();
-    const storyId = doc.id;
-
-    const p = document.createElement('p');
-    p.textContent = `${username}: ${text}`;
-    
-    // Word count
-    totalWords += text.split(/\s+/).length;
-
-    // Like button
-    const likeBtn = document.createElement('button');
-    likeBtn.textContent = `❤️ ${likes}`;
-    likeBtn.className = 'like';
-    likeBtn.onclick = () => {
-      db.collection('story').doc(storyId).update({
-        likes: firebase.firestore.FieldValue.increment(1)
-      });
-    };
-
-    // Voice button
-    const speakBtn = document.createElement('button');
-    speakBtn.textContent = '🔊';
-    speakBtn.onclick = () => {
-      const utterance = new SpeechSynthesisUtterance(`${username} says: ${text}`);
-      speechSynthesis.speak(utterance);
-    };
-
-    p.appendChild(likeBtn);
-    p.appendChild(speakBtn);
-    storyDiv.appendChild(p);
+  db.collection('messages').add({
+    text,
+    uid: currentUser.uid,
+    name: currentUser.displayName,
+    photo: currentUser.photoURL,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    likes: [],
+    replies: []
   });
 
-  wordCount.textContent = `Total Words: ${totalWords}`;
-});
-        
+  messageText.value = '';
+}
+
+function loadMessages() {
+  db.collection('messages').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+    messagesDiv.innerHTML = '';
+    snapshot.forEach(doc => {
+      const msg = doc.data();
+      const div = document.createElement('div');
+      div.className = 'message';
+
+      div.innerHTML = `
+        <div class="meta">
+          <img src="${msg.photo}" width="30" height="30"/> 
+          <strong>${msg.name}</strong>
+        </div>
+        <div>${msg.text}</div>
+        <div>
+          <button class="like" onclick="likeMessage('${doc.id}')">❤️ ${msg.likes.length}</button>
+          <button class="reply" onclick="replyToMessage('${doc.id}')">↩️ Reply</button>
+        </div>
+      `;
+
+      messagesDiv.appendChild(div);
+    });
+  });
+}
+
+function likeMessage(id) {
+  const docRef = db.collection('messages').doc(id);
+  docRef.get().then(doc => {
+    const data = doc.data();
+    if (!data.likes.includes(currentUser.uid)) {
+      docRef.update({
+        likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+      });
+    }
+  });
+}
+
+function replyToMessage(id) {
+  const reply = prompt("Your reply:");
+  if (!reply) return;
+  const docRef = db.collection('messages').doc(id);
+  docRef.update({
+    replies: firebase.firestore.FieldValue.arrayUnion({
+      uid: currentUser.uid,
+      name: currentUser.displayName,
+      text: reply
+    })
+  });
+}
+
+function clearMessages() {
+  if (confirm("Are you sure you want to clear all messages?")) {
+    db.collection('messages').get().then(snapshot => {
+      snapshot.forEach(doc => doc.ref.delete());
+    });
+  }
+}
+
+// Dark mode toggle
+document.getElementById('darkModeToggle').onclick = () => {
+  document.body.classList.toggle('dark');
+};
+      
