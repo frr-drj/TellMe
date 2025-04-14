@@ -1,13 +1,19 @@
 body {
   font-family: Arial, sans-serif;
-  padding: 20px;
-  background-color: white;
+  background: white;
   color: black;
+  margin: 0;
+  padding: 20px;
 }
 
 body.dark {
-  background-color: #121212;
-  color: #f1f1f1;
+  background: #121212;
+  color: white;
+}
+
+.container {
+  max-width: 600px;
+  margin: auto;
 }
 
 header {
@@ -16,29 +22,60 @@ header {
   align-items: center;
 }
 
-textarea, input, button {
+.card {
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin-top: 20px;
+}
+
+input, textarea, button {
+  display: block;
   width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+#userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#userInfo img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.message {
+  background: #f1f1f1;
   margin: 10px 0;
   padding: 10px;
-  font-size: 16px;
+  border-radius: 8px;
+  position: relative;
 }
 
-#story p {
-  background: #f2f2f2;
-  padding: 10px;
-  border-radius: 6px;
-  margin: 10px 0;
+.message .meta {
+  font-size: 0.8em;
+  color: gray;
 }
 
-body.dark #story p {
-  background: #1f1f1f;
-}
-
-button.like {
-  background: transparent;
+button.like, button.reply {
+  background: none;
   border: none;
-  color: red;
-  font-size: 16px;
   cursor: pointer;
-  margin-left: 10px;
+  margin-left: 5px;
+}
+
+.hidden {
+  display: none;
+}
+
+#adminBadge {
+  font-weight: bold;
+  color: red;
 }
