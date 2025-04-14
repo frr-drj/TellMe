@@ -2,45 +2,60 @@ const firebaseConfig = {
   apiKey: "AIzaSyC7Y_FWNpb0rB5wSNb2Xc7X2W7Sg99Z5-M",
   authDomain: "tellme-8f210.firebaseapp.com",
   projectId: "tellme-8f210",
-  storageBucket: "tellme-8f210.firebasestorage.app",
+  storageBucket: "tellme-8f210.appspot.com",
   messagingSenderId: "390546456642",
   appId: "1:390546456642:web:8cdee5927bdd7e7adc6ddb",
   measurementId: "G-LV9SL7JLW3"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
 
-const email = document.getElementById('email');
-const password = document.getElementById('password');
-const displayName = document.getElementById('displayName');
-const photoURL = document.getElementById('photoURL');
-const authSection = document.getElementById('authSection');
-const chatSection = document.getElementById('chatSection');
-const userName = document.getElementById('userName');
-const userPhoto = document.getElementById('userPhoto');
-const messageText = document.getElementById('messageText');
-const messagesDiv = document.getElementById('messages');
-const adminPanel = document.getElementById('adminPanel');
-const adminBadge = document.getElementById('adminBadge');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const chatContainer = document.getElementById('chatContainer');
+const authContainer = document.getElementById('authContainer');
 
-let currentUser = null;
-let adminEmail = "giridirghraj@gmail.com";
+function toggleAuth() {
+  loginForm.classList.toggle('hidden');
+  registerForm.classList.toggle('hidden');
+}
 
 function register() {
-  auth.createUserWithEmailAndPassword(email.value, password.value)
-    .then(cred => {
-      return cred.user.updateProfile({
-        displayName: displayName.value,
-        photoURL: photoURL.value || ''
+  const name = document.getElementById('regName').value;
+  const username = document.getElementById('regUsername').value;
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPassword').value;
+  const photo = document.getElementById('regPhoto').files[0];
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(async (cred) => {
+      let photoURL = '';
+      if (photo) {
+        const snap = await storage.ref('profiles/' + cred.user.uid).put(photo);
+        photoURL = await snap.ref.getDownloadURL();
+      }
+
+      await cred.user.updateProfile({
+        displayName: name,
+        photoURL: photoURL
+      });
+
+      await db.collection('users').doc(cred.user.uid).set({
+        name,
+        username,
+        email,
+        photoURL
       });
     });
 }
 
 function login() {
-  auth.signInWithEmailAndPassword(email.value, password.value)
-    .catch(err => alert(err.message));
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  auth.signInWithEmailAndPassword(email, password).catch(err => alert(err.message));
 }
 
 function logout() {
@@ -49,59 +64,70 @@ function logout() {
 
 auth.onAuthStateChanged(user => {
   if (user) {
-    currentUser = user;
-    authSection.classList.add('hidden');
-    chatSection.classList.remove('hidden');
-    userName.innerText = user.displayName || "Anonymous";
-    userPhoto.src = user.photoURL || 'https://via.placeholder.com/40';
-    if (user.email === adminEmail) {
-      adminPanel.classList.remove('hidden');
-      adminBadge.classList.remove('hidden');
+    authContainer.classList.add('hidden');
+    chatContainer.classList.remove('hidden');
+
+    document.getElementById('userPic').src = user.photoURL;
+    document.getElementById('userDisplayName').textContent = user.displayName;
+
+    db.collection('users').doc(user.uid).get().then(doc => {
+      document.getElementById('userUsername').textContent = '@' + doc.data().username;
+    });
+
+    if (user.email === 'giridirghraj@gmail.com') {
+      document.getElementById('adminBadge').classList.remove('hidden');
     }
-    loadMessages();
+
+    listenForMessages();
   } else {
-    currentUser = null;
-    authSection.classList.remove('hidden');
-    chatSection.classList.add('hidden');
-    adminPanel.classList.add('hidden');
+    chatContainer.classList.add('hidden');
+    authContainer.classList.remove('hidden');
   }
 });
 
 function sendMessage() {
-  const text = messageText.value.trim();
+  const text = document.getElementById('messageInput').value.trim();
   if (!text) return;
 
+  const user = auth.currentUser;
+
   db.collection('messages').add({
-    text,
-    uid: currentUser.uid,
-    name: currentUser.displayName,
-    photo: currentUser.photoURL,
+    uid: user.uid,
+    name: user.displayName,
+    photo: user.photoURL,
+    text: text,
     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     likes: [],
     replies: []
   });
 
-  messageText.value = '';
+  document.getElementById('messageInput').value = '';
 }
 
-function loadMessages() {
+function listenForMessages() {
   db.collection('messages').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+    const messagesDiv = document.getElementById('messages');
     messagesDiv.innerHTML = '';
+
     snapshot.forEach(doc => {
       const msg = doc.data();
       const div = document.createElement('div');
       div.className = 'message';
 
+      let replyHTML = '';
+      if (msg.replies) {
+        replyHTML = msg.replies.map(r => `
+          <div class="reply">
+            <strong>${r.name}</strong>: ${r.text}
+          </div>
+        `).join('');
+      }
+
       div.innerHTML = `
-        <div class="meta">
-          <img src="${msg.photo}" width="30" height="30"/> 
-          <strong>${msg.name}</strong>
-        </div>
+        <div class="meta"><img src="${msg.photo}" width="20" height="20"> <strong>${msg.name}</strong></div>
         <div>${msg.text}</div>
-        <div>
-          <button class="like" onclick="likeMessage('${doc.id}')">❤️ ${msg.likes.length}</button>
-          <button class="reply" onclick="replyToMessage('${doc.id}')">↩️ Reply</button>
-        </div>
+        ${replyHTML}
+        <button onclick="replyToMessage('${doc.id}')">Reply</button>
       `;
 
       messagesDiv.appendChild(div);
@@ -109,41 +135,18 @@ function loadMessages() {
   });
 }
 
-function likeMessage(id) {
-  const docRef = db.collection('messages').doc(id);
-  docRef.get().then(doc => {
-    const data = doc.data();
-    if (!data.likes.includes(currentUser.uid)) {
-      docRef.update({
-        likes: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-      });
-    }
-  });
-}
-
 function replyToMessage(id) {
-  const reply = prompt("Your reply:");
+  const reply = prompt("Enter your reply:");
   if (!reply) return;
-  const docRef = db.collection('messages').doc(id);
-  docRef.update({
+
+  const user = auth.currentUser;
+
+  db.collection('messages').doc(id).update({
     replies: firebase.firestore.FieldValue.arrayUnion({
-      uid: currentUser.uid,
-      name: currentUser.displayName,
+      uid: user.uid,
+      name: user.displayName,
       text: reply
     })
   });
-}
-
-function clearMessages() {
-  if (confirm("Are you sure you want to clear all messages?")) {
-    db.collection('messages').get().then(snapshot => {
-      snapshot.forEach(doc => doc.ref.delete());
-    });
-  }
-}
-
-// Dark mode toggle
-document.getElementById('darkModeToggle').onclick = () => {
-  document.body.classList.toggle('dark');
-};
-      
+        }
+        
