@@ -1,61 +1,44 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
   font-family: Arial, sans-serif;
-  background-color: #f4f4f9;
-  color: #333;
-}
-
-.container {
-  max-width: 600px;
-  margin: 20px auto;
-  text-align: center;
   padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  color: black;
 }
 
-h1 {
-  color: #4CAF50;
-  font-size: 2.5rem;
-  margin-bottom: 20px;
+body.dark {
+  background-color: #121212;
+  color: #f1f1f1;
 }
 
-.story {
-  margin: 20px 0;
-  padding: 10px;
-  background-color: #fafafa;
-  border-radius: 6px;
-  min-height: 150px;
-  overflow-y: auto;
-  text-align: left;
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-textarea {
+textarea, input, button {
   width: 100%;
+  margin: 10px 0;
   padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-family: Arial, sans-serif;
+  font-size: 16px;
 }
 
-button {
-  padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
+#story p {
+  background: #f2f2f2;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
+body.dark #story p {
+  background: #1f1f1f;
+}
+
+button.like {
+  background: transparent;
   border: none;
-  border-radius: 6px;
+  color: red;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 1rem;
-}
-
-button:hover {
-  background-color: #45a049;
+  margin-left: 10px;
 }
