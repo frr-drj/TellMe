@@ -1,22 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TellMe - Collaborative Storytelling</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="container">
-    <h1>Welcome to TellMe</h1>
-    <div id="story" class="story"></div>
-    <textarea id="storyInput" placeholder="Add your sentence here..." rows="4"></textarea>
-    <button id="addStoryButton">Add to Story</button>
-  </div>
-
-  <!-- Firebase SDKs -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TellMe - Story Together</title>
+  <link rel="stylesheet" href="styles.css"/>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+  <header>
+    <h1>TellMe</h1>
+    <button id="toggleMode">Toggle Dark Mode</button>
+  </header>
+
+  <main>
+    <div id="theme">Theme: Freestyle</div>
+    <div id="wordCount">Total Words: 0</div>
+
+    <input type="text" id="username" placeholder="Enter your name"/>
+    <textarea id="storyInput" placeholder="Continue the story..."></textarea>
+    <button id="addStoryButton">Add to Story</button>
+
+    <div id="story"></div>
+  </main>
+
   <script src="app.js"></script>
 </body>
 </html>
