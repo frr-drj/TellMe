@@ -3,27 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TellMe - Story Together</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <title>TellMe 2.0 - Chat App</title>
+  <link rel="stylesheet" href="styles.css" />
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
-  <header>
-    <h1>TellMe</h1>
-    <button id="toggleMode">Toggle Dark Mode</button>
-  </header>
+  <div class="container">
+    <header>
+      <h1>TellMe 2.0</h1>
+      <button id="darkModeToggle">Toggle Dark Mode</button>
+    </header>
 
-  <main>
-    <div id="theme">Theme: Freestyle</div>
-    <div id="wordCount">Total Words: 0</div>
+    <div id="authSection" class="card">
+      <h2>Login / Register</h2>
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <input type="text" id="displayName" placeholder="Display Name (Register only)" />
+      <input type="url" id="photoURL" placeholder="Photo URL (optional)" />
+      <button onclick="register()">Register</button>
+      <button onclick="login()">Login</button>
+    </div>
 
-    <input type="text" id="username" placeholder="Enter your name"/>
-    <textarea id="storyInput" placeholder="Continue the story..."></textarea>
-    <button id="addStoryButton">Add to Story</button>
+    <div id="chatSection" class="hidden">
+      <div id="userInfo">
+        <img id="userPhoto" />
+        <span id="userName"></span>
+        <button onclick="logout()">Logout</button>
+        <span id="adminBadge" class="hidden">[ADMIN]</span>
+      </div>
 
-    <div id="story"></div>
-  </main>
+      <div id="messageInput">
+        <textarea id="messageText" placeholder="Type your message..."></textarea>
+        <button onclick="sendMessage()">Send</button>
+      </div>
+
+      <div id="messages"></div>
+    </div>
+
+    <div id="adminPanel" class="hidden">
+      <h3>Admin Panel</h3>
+      <button onclick="clearMessages()">Clear All Messages</button>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
