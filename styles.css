@@ -1,19 +1,14 @@
 body {
-  font-family: Arial, sans-serif;
-  background: white;
-  color: black;
+  font-family: 'Segoe UI', sans-serif;
   margin: 0;
-  padding: 20px;
+  background: #f4f4f4;
+  color: #333;
 }
 
-body.dark {
-  background: #121212;
-  color: white;
-}
-
-.container {
-  max-width: 600px;
+.auth-container, .chat-container {
+  max-width: 500px;
   margin: auto;
+  padding: 20px;
 }
 
 header {
@@ -22,60 +17,86 @@ header {
   align-items: center;
 }
 
-.card {
-  padding: 10px;
-  border: 1px solid #ccc;
-  margin-top: 20px;
-}
-
-input, textarea, button {
-  display: block;
-  width: 100%;
-  margin: 5px 0;
-  padding: 10px;
-}
-
-textarea {
-  resize: vertical;
-}
-
-#userInfo {
+.user-info {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-#userInfo img {
+.user-info img {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-}
-
-.message {
-  background: #f1f1f1;
-  margin: 10px 0;
-  padding: 10px;
-  border-radius: 8px;
-  position: relative;
-}
-
-.message .meta {
-  font-size: 0.8em;
-  color: gray;
-}
-
-button.like, button.reply {
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: 5px;
 }
 
 .hidden {
   display: none;
 }
 
+.form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+input, textarea, button {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+.input-area {
+  display: flex;
+  gap: 10px;
+}
+
+textarea {
+  flex: 1;
+  resize: none;
+}
+
+main#messages {
+  max-height: 400px;
+  overflow-y: auto;
+  margin: 20px 0;
+}
+
+.message {
+  background: white;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  position: relative;
+}
+
+.message .meta {
+  font-size: 0.8em;
+  color: #777;
+}
+
+.message .reply {
+  margin-left: 20px;
+  border-left: 2px solid #ccc;
+  padding-left: 10px;
+}
+
 #adminBadge {
-  font-weight: bold;
+  font-size: 0.7em;
   color: red;
+  font-weight: bold;
+  margin-left: 10px;
 }
