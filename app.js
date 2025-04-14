@@ -1,4 +1,4 @@
-// Firebase configuration
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyC7Y_FWNpb0rB5wSNb2Xc7X2W7Sg99Z5-M",
   authDomain: "tellme-8f210.firebaseapp.com",
@@ -9,39 +9,77 @@ const firebaseConfig = {
   measurementId: "G-LV9SL7JLW3"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// References to DOM elements
+// DOM elements
+const usernameInput = document.getElementById('username');
 const storyInput = document.getElementById('storyInput');
 const addStoryButton = document.getElementById('addStoryButton');
 const storyDiv = document.getElementById('story');
+const wordCount = document.getElementById('wordCount');
+const toggleMode = document.getElementById('toggleMode');
 
-// Function to add new story part
+// Toggle dark mode
+toggleMode.addEventListener('click', () => {
+  document.body.classList.toggle('dark');
+});
+
+// Add story
 addStoryButton.addEventListener('click', () => {
   const storyPart = storyInput.value.trim();
+  const username = usernameInput.value.trim() || "Anonymous";
+
   if (storyPart) {
-    // Add story part to Firestore
     db.collection('story').add({
       text: storyPart,
+      username: username,
+      likes: 0,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     }).then(() => {
-      storyInput.value = ''; // Clear input field
-    });
+      storyInput.value = '';
+    }).catch(err => console.error("Error:", err));
   }
 });
 
-// Real-time listener to update story on all devices
-db.collection('story')
-  .orderBy('timestamp')
-  .onSnapshot(snapshot => {
-    storyDiv.innerHTML = ''; // Clear existing story
+// Real-time listener
+db.collection('story').orderBy('timestamp').onSnapshot(snapshot => {
+  storyDiv.innerHTML = '';
+  let totalWords = 0;
 
-    snapshot.docs.forEach(doc => {
-      const storyText = doc.data().text;
-      const p = document.createElement('p');
-      p.textContent = storyText;
-      storyDiv.appendChild(p); // Append each new story part
-    });
+  snapshot.docs.forEach(doc => {
+    const { text, username, likes } = doc.data();
+    const storyId = doc.id;
+
+    const p = document.createElement('p');
+    p.textContent = `${username}: ${text}`;
+    
+    // Word count
+    totalWords += text.split(/\s+/).length;
+
+    // Like button
+    const likeBtn = document.createElement('button');
+    likeBtn.textContent = `❤️ ${likes}`;
+    likeBtn.className = 'like';
+    likeBtn.onclick = () => {
+      db.collection('story').doc(storyId).update({
+        likes: firebase.firestore.FieldValue.increment(1)
+      });
+    };
+
+    // Voice button
+    const speakBtn = document.createElement('button');
+    speakBtn.textContent = '🔊';
+    speakBtn.onclick = () => {
+      const utterance = new SpeechSynthesisUtterance(`${username} says: ${text}`);
+      speechSynthesis.speak(utterance);
+    };
+
+    p.appendChild(likeBtn);
+    p.appendChild(speakBtn);
+    storyDiv.appendChild(p);
   });
+
+  wordCount.textContent = `Total Words: ${totalWords}`;
+});
+        
